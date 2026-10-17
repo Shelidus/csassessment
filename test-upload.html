@@ -1,0 +1,26 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Apps Script POST Test</title>
+</head>
+<body>
+  <h2>Apps Script Backend Test</h2>
+
+  <form
+    method="POST"
+    target="_blank"
+    action="https://script.google.com/a/macros/capestart.com/s/AKfycby3o4229vTB9eAfv8H0M4WQMB9oj8QZWg_a5Y345k69Ph2HncSI31wizGOflDje5e6-/exec">
+
+    <input
+      type="hidden"
+      name="payload"
+      value='{"name":"Backend Test","email":"test@example.com","consent":true,"mimeType":"video/webm","videoDataUrl":"data:video/webm;base64,AA=="}'>
+
+    <button type="submit">Test backend POST</button>
+  </form>
+
+  <p>After submitting, check Apps Script → Executions.</p>
+</body>
+</html>
