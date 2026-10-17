@@ -22,7 +22,13 @@
     .recording-indicator{display:inline-flex;align-items:center;gap:7px}
     .dot{width:9px;height:9px;border-radius:50%;background:#b7c0ce}
     .dot.live{background:#e53935;box-shadow:0 0 0 4px #e5393520}
-    .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+    .controls{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+    .step-label{margin:18px 0 8px;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .helper{margin:7px 0 0;color:var(--muted);font-size:.85rem}
+    .controls button{width:100%;min-height:50px}
+    .download{min-height:48px}
+    .button-status{display:flex;gap:8px;align-items:center;margin:14px 0 0;color:var(--muted);font-size:.9rem}
+    @media(max-width:500px){.controls{grid-template-columns:1fr}}
     button,.download{min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:0;border-radius:11px;font:inherit;font-weight:750;text-decoration:none;cursor:pointer}
     button:disabled{opacity:.45;cursor:not-allowed}
     .primary{background:var(--blue);color:#fff}.primary:hover:not(:disabled){background:var(--blue2)}
@@ -41,7 +47,7 @@
 <main class="app">
   <p class="eyebrow">Private · On your device</p>
   <h1>Video Recorder</h1>
-  <p class="intro">Record a video, preview it, then download it to your device. Nothing is uploaded to a server.</p>
+  <p class="intro">Record a video, preview it, download it, or upload it to the connected Google Drive portal.</p>
 
   <div class="screen">
     <video id="video" playsinline autoplay muted></video>
@@ -57,17 +63,18 @@
     <strong id="timer">00:00</strong>
   </div>
 
+  <p class="step-label">Step 1 · Record your video</p>
   <div class="controls">
-    <button id="startCamera" class="primary" type="button">Enable camera</button>
-    <button id="startRecord" class="primary" type="button" disabled>Start recording</button>
-    <button id="stopRecord" class="danger" type="button" disabled>Stop recording</button>
+    <button id="recordAction" class="primary" type="button" disabled>Starting camera…</button>
     <button id="retake" class="secondary" type="button" disabled>Discard and retake</button>
   </div>
+  <p id="recordHelp" class="helper">Preparing your camera… Allow camera and microphone access if your browser asks.</p>
 
+  <p class="step-label">Step 2 · Review and save</p>
   <a id="download" class="download disabled" href="#" download="recording.webm" aria-disabled="true">Download video</a>
-  <button id="uploadToDrive" class="primary" type="button" disabled>Upload video to Drive</button>
+  <p class="helper">After stopping, preview the video above. Click Download video to save it and close this window.</p>
   <div id="message" class="message" role="status" aria-live="polite"></div>
-  <p class="note">Camera access requires HTTPS (GitHub Pages supports this) or localhost. Recording stays in this browser tab until you download it or close the page. Large recordings use device memory, so keep recordings reasonably short.</p>
+  <p class="note">Camera access requires HTTPS (GitHub Pages supports this) or localhost. Your recording stays in this browser tab until you download it or close the window. Large recordings use device memory, so keep recordings reasonably short.</p>
 </main>
 
 <script>
@@ -76,16 +83,13 @@
   const $ = id => document.getElementById(id);
   const video = $('video');
   const placeholder = $('placeholder');
-  const startCameraButton = $('startCamera');
-  const startButton = $('startRecord');
-  const stopButton = $('stopRecord');
+  const recordActionButton = $('recordAction');
   const retakeButton = $('retake');
   const downloadLink = $('download');
   const message = $('message');
   const timerText = $('timer');
   const recordState = $('recordState');
   const dot = $('dot');
-  const uploadToDriveButton = $('uploadToDrive');
 
   let stream = null;
   let recorder = null;
@@ -98,10 +102,10 @@
 
   const mimeType = chooseMimeType();
 
-  startCameraButton.addEventListener('click', enableCamera);
-  startButton.addEventListener('click', startRecording);
-  stopButton.addEventListener('click', stopRecording);
+  recordActionButton.addEventListener('click', toggleRecording);
   retakeButton.addEventListener('click', discardAndRetake);
+  downloadLink.addEventListener('click', downloadAndClose);
+  window.addEventListener('load', enableCamera, { once: true });
 
   async function enableCamera() {
     clearMessage();
@@ -109,7 +113,6 @@
       showMessage('Camera access is unavailable in this browser. Open this page over HTTPS in a modern browser.', 'error');
       return;
     }
-    startCameraButton.disabled = true;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
@@ -119,17 +122,26 @@
       video.muted = true;
       await video.play();
       placeholder.style.display = 'none';
-      startCameraButton.textContent = 'Camera enabled';
-      startButton.disabled = false;
-      showMessage('Camera ready. Press Start recording when you are ready.', 'success');
+      recordActionButton.disabled = false;
+      recordActionButton.textContent = 'Start recording';
+      $('recordHelp').textContent = 'Camera ready. Click Start recording to begin.';
+      showMessage('Camera ready. Follow the steps below to record, review, and finish.', 'success');
     } catch (err) {
-      startCameraButton.disabled = false;
       const detail = err && err.name === 'NotAllowedError'
         ? 'Camera or microphone permission was denied. Allow access in your browser settings and try again.'
         : err && err.name === 'NotFoundError'
           ? 'No camera or microphone was found on this device.'
           : 'Could not access the camera. Check browser permissions and try again.';
-      showMessage(detail, 'error');
+      $('recordHelp').textContent = 'Camera could not start. Check this site’s camera and microphone permissions, then reload this page.';
+      showMessage(detail + ' After allowing access, reload this page to try again.', 'error');
+    }
+  }
+
+  function toggleRecording() {
+    if (recording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   }
 
@@ -147,7 +159,6 @@
       chunks = [];
       recordedBlob = null;
       disableDownload();
-      uploadToDriveButton.disabled = true;
       recorder = mimeType
         ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream);
@@ -168,11 +179,12 @@
       timerInterval = window.setInterval(updateTimer, 250);
       recordState.textContent = 'Recording';
       dot.classList.add('live');
-      startButton.disabled = true;
-      stopButton.disabled = false;
+      recordActionButton.textContent = 'Stop recording';
+      recordActionButton.classList.remove('primary');
+      recordActionButton.classList.add('danger');
+      recordActionButton.disabled = false;
       retakeButton.disabled = true;
-      startCameraButton.disabled = true;
-      showMessage('Recording in progress. Press Stop recording when finished.', 'info');
+        showMessage('Recording in progress. Press Stop recording when finished.', 'info');
     } catch (err) {
       showMessage('Could not start recording. Your browser may not support the available video format.', 'error');
     }
@@ -180,7 +192,7 @@
 
   function stopRecording() {
     if (!recorder || recorder.state === 'inactive') return;
-    stopButton.disabled = true;
+    recordActionButton.disabled = true;
     recorder.stop();
   }
 
@@ -214,9 +226,9 @@
     downloadLink.download = 'recording-' + new Date().toISOString().replace(/[:.]/g, '-') + ext;
     downloadLink.classList.remove('disabled');
     downloadLink.setAttribute('aria-disabled', 'false');
-    uploadToDriveButton.disabled = false;
     retakeButton.disabled = false;
-    showMessage('Recording ready to preview. Play it back, then choose Download video to save it locally.', 'success');
+    $('recordHelp').textContent = 'Recording finished. Preview the video, then click Download video to save it and close this window.';
+    showMessage('Recording ready. Preview your video, then click Download video to save it and close this window.', 'success');
   }
 
   function discardAndRetake() {
@@ -236,19 +248,23 @@
     timerText.textContent = '00:00';
     recordState.textContent = 'Not recording';
     dot.classList.remove('live');
-    startButton.disabled = !stream;
-    stopButton.disabled = true;
+    recordActionButton.disabled = !stream;
+    recordActionButton.textContent = 'Start recording';
+    recordActionButton.classList.remove('danger');
+    recordActionButton.classList.add('primary');
+    recordActionButton.disabled = true;
     retakeButton.disabled = true;
-    startCameraButton.disabled = !!stream;
+    $('recordHelp').textContent = 'Ready for another take. Click Start recording when you are ready.';
     clearMessage();
   }
 
   function resetRecordingControls() {
     recordState.textContent = 'Not recording';
     dot.classList.remove('live');
-    startButton.disabled = !stream;
-    stopButton.disabled = true;
-    startCameraButton.disabled = !!stream;
+    recordActionButton.disabled = !stream;
+    recordActionButton.textContent = 'Start recording';
+    recordActionButton.classList.remove('danger');
+    recordActionButton.classList.add('primary');
     updateTimer();
   }
 
@@ -258,41 +274,31 @@
   }
 
   function disableDownload() {
-    uploadToDriveButton.disabled = true;
     downloadLink.removeAttribute('href');
     downloadLink.classList.add('disabled');
     downloadLink.setAttribute('aria-disabled', 'true');
   }
 
-  function sendRecordingToParent() {
-    if (!recordedBlob || !recordedBlob.size) {
-      showMessage('Record a video first, then upload it.', 'error');
+  function downloadAndClose(event) {
+    if (!recordedBlob || !recordedUrl || recording) {
+      event.preventDefault();
+      showMessage('Stop recording first. Your finished video will be available to download afterward.', 'error');
       return;
     }
-    if (recordedBlob.size > 5 * 1024 * 1024) {
-      showMessage('This recording exceeds the 5 MB upload limit. Please record a shorter video.', 'error');
-      return;
-    }
-    uploadToDriveButton.disabled = true;
-    showMessage('Sending recording to the upload page…', 'info');
-    const mime = recordedBlob.type || 'video/webm';
-    const ext = extensionFor(mime);
-    const name = 'recording-' + new Date().toISOString().replace(/[:.]/g, '-') + ext;
-    window.parent.postMessage({
-      type: 'recorded-video-upload',
-      fileName: name,
-      mimeType: mime,
-      blob: recordedBlob
-    }, '*');
-  }
 
-  window.addEventListener('message', event => {
-    if (event.source !== window.parent) return;
-    const data = event.data;
-    if (!data || data.type !== 'video-upload-complete') return;
-    uploadToDriveButton.disabled = false;
-    showMessage(data.message || (data.success ? 'Upload complete.' : 'Upload failed.'), data.success ? 'success' : 'error');
-  });
+    // The anchor's native download is initiated by the user click.
+    // Delay closing briefly so the browser can start processing the download.
+    showMessage('Your download is starting. This recorder window will close shortly.', 'success');
+    window.setTimeout(() => {
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      window.close();
+      window.setTimeout(() => {
+        if (!window.closed) {
+          showMessage('Your video download should be in progress. Your browser did not allow this window to close automatically, so you can close it manually.', 'info');
+        }
+      }, 300);
+    }, 900);
+  }
 
   function chooseMimeType() {
     if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
