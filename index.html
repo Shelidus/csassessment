@@ -66,13 +66,12 @@
   <p class="step-label">Step 1 · Record your video</p>
   <div class="controls">
     <button id="recordAction" class="primary" type="button" disabled>Starting camera…</button>
-    <button id="retake" class="secondary" type="button" disabled>Discard and retake</button>
   </div>
   <p id="recordHelp" class="helper">Preparing your camera… Allow camera and microphone access if your browser asks.</p>
 
   <p class="step-label">Step 2 · Review and save</p>
   <a id="download" class="download disabled" href="#" download="recording.webm" aria-disabled="true">Download video</a>
-  <p class="helper">After stopping, preview the video above. Click Download video to save it and close this window.</p>
+  <p class="helper">Click Start recording to begin. While recording, the same button stops the video. After stopping, click Start recording again to discard that take and record a new one, or download the current video.</p>
   <div id="message" class="message" role="status" aria-live="polite"></div>
   <p class="note">Camera access requires HTTPS (GitHub Pages supports this) or localhost. Your recording stays in this browser tab until you download it or close the window. Large recordings use device memory, so keep recordings reasonably short.</p>
 </main>
@@ -84,7 +83,6 @@
   const video = $('video');
   const placeholder = $('placeholder');
   const recordActionButton = $('recordAction');
-  const retakeButton = $('retake');
   const downloadLink = $('download');
   const message = $('message');
   const timerText = $('timer');
@@ -103,7 +101,6 @@
   const mimeType = chooseMimeType();
 
   recordActionButton.addEventListener('click', toggleRecording);
-  retakeButton.addEventListener('click', discardAndRetake);
   downloadLink.addEventListener('click', downloadAndClose);
   window.addEventListener('load', enableCamera, { once: true });
 
@@ -147,6 +144,24 @@
 
   function startRecording() {
     clearMessage();
+    // Pressing Start after a completed take discards that take and starts a fresh recording.
+    if (recordedUrl) {
+      URL.revokeObjectURL(recordedUrl);
+      recordedUrl = null;
+    }
+    recordedBlob = null;
+    chunks = [];
+    video.pause();
+    video.removeAttribute('src');
+    video.controls = false;
+    video.muted = true;
+    video.autoplay = true;
+    if (stream) {
+      video.srcObject = stream;
+      video.play().catch(() => {});
+    }
+    disableDownload();
+    timerText.textContent = '00:00';
     if (!stream) {
       showMessage('Enable the camera before recording.', 'error');
       return;
@@ -183,7 +198,6 @@
       recordActionButton.classList.remove('primary');
       recordActionButton.classList.add('danger');
       recordActionButton.disabled = false;
-      retakeButton.disabled = true;
         showMessage('Recording in progress. Press Stop recording when finished.', 'info');
     } catch (err) {
       showMessage('Could not start recording. Your browser may not support the available video format.', 'error');
@@ -226,36 +240,8 @@
     downloadLink.download = 'recording-' + new Date().toISOString().replace(/[:.]/g, '-') + ext;
     downloadLink.classList.remove('disabled');
     downloadLink.setAttribute('aria-disabled', 'false');
-    retakeButton.disabled = false;
     $('recordHelp').textContent = 'Recording finished. Preview the video, then click Download video to save it and close this window.';
-    showMessage('Recording ready. Preview your video, then click Download video to save it and close this window.', 'success');
-  }
-
-  function discardAndRetake() {
-    if (recording && recorder && recorder.state !== 'inactive') recorder.stop();
-    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
-    recordedUrl = null;
-    recordedBlob = null;
-    chunks = [];
-    video.pause();
-    video.removeAttribute('src');
-    video.controls = false;
-    video.muted = true;
-    video.autoplay = true;
-    video.srcObject = stream;
-    if (stream) video.play().catch(() => {});
-    disableDownload();
-    timerText.textContent = '00:00';
-    recordState.textContent = 'Not recording';
-    dot.classList.remove('live');
-    recordActionButton.disabled = !stream;
-    recordActionButton.textContent = 'Start recording';
-    recordActionButton.classList.remove('danger');
-    recordActionButton.classList.add('primary');
-    recordActionButton.disabled = true;
-    retakeButton.disabled = true;
-    $('recordHelp').textContent = 'Ready for another take. Click Start recording when you are ready.';
-    clearMessage();
+    showMessage('Recording ready. Preview it, download it, or click Start recording to discard this take and record again.', 'success');
   }
 
   function resetRecordingControls() {
