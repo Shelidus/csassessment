@@ -1,740 +1,324 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#14213d">
-  <title>Video Recording Portal</title>
-
+  <meta name="theme-color" content="#f4f7fb">
+  <title>Video Recorder</title>
   <style>
-    :root {
-      --navy: #14213d;
-      --blue: #3563e9;
-      --blue-hover: #254acb;
-      --bg: #f4f7fc;
-      --text: #1d2939;
-      --muted: #667085;
-      --border: #e4e9f2;
-      --green: #067647;
-      --red: #b42318;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Arial, sans-serif;
-    }
-
-    .topbar {
-      min-height: 68px;
-      padding: 12px 6%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      background: white;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      font-weight: 800;
-      color: var(--navy);
-    }
-
-    .brand-icon {
-      width: 38px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      border-radius: 11px;
-      color: white;
-      background: var(--blue);
-    }
-
-    .secure {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    main {
-      max-width: 1050px;
-      margin: 42px auto;
-      padding: 0 20px;
-    }
-
-    .intro {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    .eyebrow {
-      color: var(--blue);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 11px 0;
-      color: var(--navy);
-      font-size: clamp(28px, 4vw, 39px);
-      letter-spacing: -1px;
-    }
-
-    .subtitle {
-      max-width: 580px;
-      margin: 0 auto;
-      color: var(--muted);
-      font-size: 15px;
-      line-height: 1.7;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr);
-      align-items: start;
-      gap: 22px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 17px;
-      overflow: hidden;
-      box-shadow: 0 10px 35px rgba(20, 33, 61, .045);
-    }
-
-    .card-head {
-      padding: 20px 22px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .card-head h2, .side h2 {
-      margin: 0;
-      font-size: 16px;
-    }
-
-    .step {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .camera-wrap {
-      position: relative;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      background: #101828;
-      aspect-ratio: 16 / 10;
-    }
-
-    #video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    #placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      padding: 24px;
-      text-align: center;
-      color: #d0d5dd;
-    }
-
-    .camera-symbol {
-      width: 75px;
-      height: 75px;
-      display: grid;
-      place-items: center;
-      border: 1px solid #475467;
-      border-radius: 23px;
-      background: #202b3d;
-      font-size: 30px;
-    }
-
-    .camera-note {
-      max-width: 300px;
-      color: #98a2b3;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .badge, .timer {
-      position: absolute;
-      top: 14px;
-      padding: 8px 10px;
-      border-radius: 7px;
-      color: white;
-      background: rgba(16, 24, 40, .82);
-      font-size: 11px;
-    }
-
-    .badge {
-      left: 14px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .timer {
-      right: 14px;
-      font-variant-numeric: tabular-nums;
-      font-size: 12px;
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      background: #98a2b3;
-      border-radius: 50%;
-    }
-
-    .badge.recording .dot {
-      background: #f04438;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      50% { opacity: .3; }
-    }
-
-    .controls { padding: 20px 22px 22px; }
-
-    .status {
-      min-height: 22px;
-      margin-bottom: 15px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    button {
-      min-height: 44px;
-      padding: 0 16px;
-      border: 0;
-      border-radius: 9px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background .15s ease;
-    }
-
-    button:focus-visible, input:focus-visible {
-      outline: 3px solid #a4bcfd;
-      outline-offset: 2px;
-    }
-
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    .primary { background: var(--blue); color: white; }
-    .primary:hover:not(:disabled) { background: var(--blue-hover); }
-    .secondary { background: #eef2f8; color: var(--navy); }
-    .danger { background: #fff0ef; color: var(--red); }
-
-    .side { padding: 23px; }
-
-    .side-intro {
-      margin: 8px 0 22px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .field { margin-bottom: 17px; }
-
-    label.field-label {
-      display: block;
-      margin-bottom: 8px;
-      color: #344054;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    input[type="text"], input[type="email"] {
-      width: 100%;
-      height: 44px;
-      padding: 0 12px;
-      border: 1px solid #d0d5dd;
-      border-radius: 9px;
-      background: white;
-      color: var(--text);
-      font: inherit;
-      font-size: 13px;
-    }
-
-    input:read-only { background: #f9fafb; }
-
-    .consent {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      margin: 20px 0;
-      color: #475467;
-      font-size: 12px;
-      line-height: 1.65;
-    }
-
-    .consent input {
-      margin-top: 4px;
-      accent-color: var(--blue);
-      flex-shrink: 0;
-    }
-
-    .full { width: 100%; }
-
-    .notice {
-      margin-top: 17px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #f0f5ff;
-      color: #344e91;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .notice strong {
-      display: block;
-      margin-bottom: 3px;
-    }
-
-    .message {
-      display: none;
-      margin-top: 14px;
-      padding: 12px;
-      border-radius: 9px;
-      font-size: 12px;
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-    }
-
-    .message.success { display: block; background: #ecfdf3; color: var(--green); }
-    .message.error { display: block; background: #fef3f2; color: var(--red); }
-    .message.info { display: block; background: #eff8ff; color: #175cd3; }
-
-    .progress {
-      display: none;
-      height: 5px;
-      margin-top: 15px;
-      overflow: hidden;
-      border-radius: 8px;
-      background: #e4e7ec;
-    }
-
-    .progress-bar {
-      width: 0;
-      height: 100%;
-      background: var(--blue);
-      transition: width .2s ease;
-    }
-
-    footer {
-      padding: 26px 10px 8px;
-      text-align: center;
-      color: #98a2b3;
-      font-size: 11px;
-    }
-
-    @media (max-width: 760px) {
-      main { margin: 27px auto; padding: 0 14px; }
-      .layout { grid-template-columns: 1fr; }
-      .topbar { padding: 12px 18px; }
-      .camera-wrap { aspect-ratio: 4 / 3; }
-      .secure { font-size: 11px; }
-    }
+    :root{--ink:#172033;--muted:#667085;--line:#dce3ee;--blue:#315bd6;--blue2:#2448b7;--bg:#f4f7fb;--green:#18794e;--red:#b42318}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;padding:22px;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .app{width:min(100%,760px);padding:clamp(20px,4vw,36px);background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 48px #18284a12}
+    .eyebrow{margin:0 0 7px;color:var(--blue);font-size:.76rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    h1{margin:0;font-size:clamp(1.8rem,5vw,2.4rem);line-height:1.15}
+    .intro{margin:12px 0 22px;color:var(--muted)}
+    .screen{position:relative;overflow:hidden;display:grid;place-items:center;min-height:220px;aspect-ratio:16/9;background:#111827;border-radius:16px}
+    video{display:block;width:100%;max-height:65vh;aspect-ratio:16/9;object-fit:contain;background:#111827}
+    .screen-placeholder{position:absolute;inset:0;display:grid;place-content:center;gap:8px;text-align:center;padding:20px;color:#e5e7eb}
+    .screen-placeholder .cam{font-size:2rem}
+    .screen-placeholder small{color:#c5ccda}
+    .timer-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:14px 0;color:var(--muted);font-size:.92rem}
+    .recording-indicator{display:inline-flex;align-items:center;gap:7px}
+    .dot{width:9px;height:9px;border-radius:50%;background:#b7c0ce}
+    .dot.live{background:#e53935;box-shadow:0 0 0 4px #e5393520}
+    .controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+    button,.download{min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:0;border-radius:11px;font:inherit;font-weight:750;text-decoration:none;cursor:pointer}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .primary{background:var(--blue);color:#fff}.primary:hover:not(:disabled){background:var(--blue2)}
+    .secondary{background:#edf1f7;color:#26334b}.danger{background:#fff0ef;color:var(--red)}
+    .download{width:100%;margin-top:12px;background:#e8f7ef;color:var(--green)}
+    .download.disabled{opacity:.45;pointer-events:none}
+    #uploadToDrive{width:100%;margin-top:10px;background:#315bd6;color:white}
+    #uploadToDrive:disabled{opacity:.45;cursor:not-allowed}
+    .message{display:none;margin-top:16px;padding:12px 14px;border-radius:11px;overflow-wrap:anywhere}
+    .message.show{display:block}.message.info{background:#eef4ff;color:#2447a5}.message.success{background:#eaf8ef;color:#176b3b}.message.error{background:#fff0ef;color:#a3261c}
+    .note{margin:18px 0 0;color:var(--muted);font-size:.82rem}
+    @media(max-width:500px){body{padding:10px}.app{border-radius:16px}.controls{grid-template-columns:1fr}.timer-row{font-size:.84rem}}
   </style>
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-icon" aria-hidden="true">▶</div>
-      <span>Video Portal</span>
+<main class="app">
+  <p class="eyebrow">Private · On your device</p>
+  <h1>Video Recorder</h1>
+  <p class="intro">Record a video, preview it, then download it to your device. Nothing is uploaded to a server.</p>
+
+  <div class="screen">
+    <video id="video" playsinline autoplay muted></video>
+    <div id="placeholder" class="screen-placeholder">
+      <span class="cam" aria-hidden="true">▣</span>
+      <strong>Your camera preview will appear here</strong>
+      <small>Allow camera and microphone access when your browser asks.</small>
     </div>
-    <div class="secure">🔒 Secure recording session</div>
-  </header>
+  </div>
 
-  <main>
-    <section class="intro">
-      <div class="eyebrow">Recording workspace</div>
-      <h1>Let's hear from you.</h1>
-      <p class="subtitle">
-        Complete your details, enable your camera, and record your video.
-        Submit your recording when you're finished.
-      </p>
-    </section>
+  <div class="timer-row">
+    <span class="recording-indicator"><span id="dot" class="dot"></span><span id="recordState">Not recording</span></span>
+    <strong id="timer">00:00</strong>
+  </div>
 
-    <div class="layout">
-      <section class="card">
-        <div class="card-head">
-          <h2>Camera & recording</h2>
-          <span class="step" id="stepLabel">Step 1 of 2</span>
-        </div>
+  <div class="controls">
+    <button id="startCamera" class="primary" type="button">Enable camera</button>
+    <button id="startRecord" class="primary" type="button" disabled>Start recording</button>
+    <button id="stopRecord" class="danger" type="button" disabled>Stop recording</button>
+    <button id="retake" class="secondary" type="button" disabled>Discard and retake</button>
+  </div>
 
-        <div class="camera-wrap">
-          <video id="video" autoplay muted playsinline hidden></video>
+  <a id="download" class="download disabled" href="#" download="recording.webm" aria-disabled="true">Download video</a>
+  <button id="uploadToDrive" class="primary" type="button" disabled>Upload video to Drive</button>
+  <div id="message" class="message" role="status" aria-live="polite"></div>
+  <p class="note">Camera access requires HTTPS (GitHub Pages supports this) or localhost. Recording stays in this browser tab until you download it or close the page. Large recordings use device memory, so keep recordings reasonably short.</p>
+</main>
 
-          <div id="placeholder">
-            <div class="camera-symbol" aria-hidden="true">▣</div>
-            <strong id="placeholderTitle">Your camera preview</strong>
-            <span class="camera-note" id="placeholderText">
-              Confirm your details, then select Enable camera.
-            </span>
-          </div>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const video = $('video');
+  const placeholder = $('placeholder');
+  const startCameraButton = $('startCamera');
+  const startButton = $('startRecord');
+  const stopButton = $('stopRecord');
+  const retakeButton = $('retake');
+  const downloadLink = $('download');
+  const message = $('message');
+  const timerText = $('timer');
+  const recordState = $('recordState');
+  const dot = $('dot');
+  const uploadToDriveButton = $('uploadToDrive');
 
-          <div class="badge" id="badge">
-            <span class="dot"></span>
-            <span id="badgeText">NOT RECORDING</span>
-          </div>
+  let stream = null;
+  let recorder = null;
+  let chunks = [];
+  let recordedBlob = null;
+  let recordedUrl = null;
+  let startedAt = 0;
+  let timerInterval = null;
+  let recording = false;
 
-          <div class="timer" id="timer">00:00</div>
-        </div>
+  const mimeType = chooseMimeType();
 
-        <div class="controls">
-          <div class="status" id="status" role="status" aria-live="polite">
-            Enter your details to get started.
-          </div>
+  startCameraButton.addEventListener('click', enableCamera);
+  startButton.addEventListener('click', startRecording);
+  stopButton.addEventListener('click', stopRecording);
+  retakeButton.addEventListener('click', discardAndRetake);
 
-          <div class="buttons">
-            <button class="secondary" id="cameraBtn" type="button" disabled>
-              Enable camera
-            </button>
-            <button class="primary" id="startBtn" type="button" disabled>
-              ● Start recording
-            </button>
-            <button class="danger" id="stopBtn" type="button" hidden>
-              ■ Stop & upload
-            </button>
-          </div>
-
-          <div class="progress" id="progress">
-            <div class="progress-bar" id="progressBar"></div>
-          </div>
-
-          <div class="message" id="uploadMessage" role="status"
-               aria-live="polite"></div>
-        </div>
-      </section>
-
-      <aside class="card">
-        <div class="side">
-          <h2>Your details</h2>
-          <p class="side-intro">
-            Provide your information and consent before recording.
-          </p>
-
-          <div class="field">
-            <label class="field-label" for="name">Full name</label>
-            <input id="name" type="text" maxlength="100"
-                   autocomplete="name" placeholder="Enter your full name">
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="email">Email address</label>
-            <input id="email" type="email" maxlength="254"
-                   autocomplete="email" placeholder="you@example.com">
-          </div>
-
-          <label class="consent">
-            <input type="checkbox" id="consent">
-            <span>
-              I consent to recording and submitting this video for the
-              stated assessment or review purpose. I understand that the
-              recording will be stored in Google Drive and accessed by
-              authorized reviewers.
-            </span>
-          </label>
-
-          <button class="primary full" id="readyBtn" type="button">
-            Confirm details
-          </button>
-
-          <div class="notice">
-            <strong>Before you begin</strong>
-            Allow camera and microphone access, use a stable internet
-            connection, and keep this page open until upload confirmation
-            appears.
-          </div>
-        </div>
-      </aside>
-    </div>
-
-    <footer>Video Recording Portal · Private candidate submissions</footer>
-  </main>
-
-  <script>
-    const SCRIPT_URL = 'https://script.google.com/a/macros/capestart.com/s/AKfycby3o4229vTB9eAfv8H0M4WQMB9oj8QZWg_a5Y345k69Ph2HncSI31wizGOflDje5e6-/exec';
-    const MAX_BYTES = 5 * 1024 * 1024;
-    const MAX_DURATION_SECONDS = 180;
-    const CHUNK_BYTES = 256 * 1024;
-    const REQUEST_TIMEOUT_MS = 45000;
-    const $ = id => document.getElementById(id);
-
-    let stream = null, recorder = null, chunks = [], startedAt = 0;
-    let timerInterval = null, durationTimeout = null;
-    let detailsConfirmed = false, busy = false, uploaded = false, cameraReady = false;
-
-    function setStatus(text) { $('status').textContent = text; }
-    function showMessage(text, type) {
-      const el = $('uploadMessage'); el.className = 'message ' + type; el.textContent = text;
+  async function enableCamera() {
+    clearMessage();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showMessage('Camera access is unavailable in this browser. Open this page over HTTPS in a modern browser.', 'error');
+      return;
     }
-    function clearMessage() { $('uploadMessage').className = 'message'; $('uploadMessage').textContent = ''; }
+    startCameraButton.disabled = true;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' },
+        audio: true
+      });
+      video.srcObject = stream;
+      video.muted = true;
+      await video.play();
+      placeholder.style.display = 'none';
+      startCameraButton.textContent = 'Camera enabled';
+      startButton.disabled = false;
+      showMessage('Camera ready. Press Start recording when you are ready.', 'success');
+    } catch (err) {
+      startCameraButton.disabled = false;
+      const detail = err && err.name === 'NotAllowedError'
+        ? 'Camera or microphone permission was denied. Allow access in your browser settings and try again.'
+        : err && err.name === 'NotFoundError'
+          ? 'No camera or microphone was found on this device.'
+          : 'Could not access the camera. Check browser permissions and try again.';
+      showMessage(detail, 'error');
+    }
+  }
 
-    function validateDetails() {
-      if (!$('name').value.trim()) { setStatus('Please enter your full name.'); $('name').focus(); return false; }
-      if (!$('email').value.trim() || !$('email').checkValidity()) { setStatus('Please enter a valid email address.'); $('email').focus(); return false; }
-      if (!$('consent').checked) { setStatus('Please confirm your consent before recording.'); $('consent').focus(); return false; }
-      return true;
+  function startRecording() {
+    clearMessage();
+    if (!stream) {
+      showMessage('Enable the camera before recording.', 'error');
+      return;
     }
+    if (!window.MediaRecorder) {
+      showMessage('Video recording is not supported by this browser. Try a current version of Chrome, Edge, or Firefox.', 'error');
+      return;
+    }
+    try {
+      chunks = [];
+      recordedBlob = null;
+      disableDownload();
+      uploadToDriveButton.disabled = true;
+      recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
 
-    $('readyBtn').addEventListener('click', () => {
-      if (busy || uploaded || !validateDetails()) return;
-      detailsConfirmed = true;
-      $('name').readOnly = true; $('email').readOnly = true; $('consent').disabled = true;
-      $('readyBtn').disabled = true; $('cameraBtn').disabled = false;
-      $('stepLabel').textContent = 'Step 2 of 2';
-      setStatus('Details confirmed. Enable your camera to continue.');
-    });
+      recorder.addEventListener('dataavailable', event => {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      });
+      recorder.addEventListener('stop', onRecordingStopped);
+      recorder.addEventListener('error', () => {
+        recording = false;
+        resetRecordingControls();
+        showMessage('The browser encountered an error while recording. Please try again.', 'error');
+      });
 
-    async function enableCamera() {
-      if (!detailsConfirmed) { setStatus('Confirm your details first.'); return; }
-      if (stream || busy || uploaded) return;
-      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-        showMessage('This browser does not support camera recording. Use an updated browser over HTTPS.', 'error'); return;
-      }
-      clearMessage(); $('cameraBtn').disabled = true; setStatus('Requesting camera and microphone access...');
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
-        });
-        cameraReady = true; $('video').srcObject = stream; $('video').hidden = false;
-        $('placeholder').style.display = 'none'; $('startBtn').disabled = false;
-        $('cameraBtn').textContent = 'Camera enabled';
-        setStatus('Camera ready. Select Start recording when you are ready.');
-      } catch (err) {
-        stream = null; $('cameraBtn').disabled = false;
-        let reason = 'Check browser permissions and try again.';
-        if (['NotAllowedError', 'SecurityError'].includes(err.name)) reason = 'Permission was denied or blocked. Open the HTTPS site directly and allow camera and microphone access.';
-        else if (err.name === 'NotFoundError') reason = 'No compatible camera or microphone was found.';
-        else if (err.name === 'NotReadableError') reason = 'The camera or microphone may be in use by another application.';
-        setStatus('Camera access failed.'); showMessage(reason, 'error');
-      }
-    }
-    $('cameraBtn').addEventListener('click', enableCamera);
-
-    function supportedMimeType() {
-      return ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm', 'video/mp4']
-        .find(type => MediaRecorder.isTypeSupported(type)) || '';
-    }
-    function formatTime(seconds) { return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'); }
-    function stopTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      if (durationTimeout) clearTimeout(durationTimeout);
-      timerInterval = null; durationTimeout = null;
-    }
-    function stopCamera() {
-      if (stream) stream.getTracks().forEach(track => track.stop());
-      stream = null; cameraReady = false; $('video').srcObject = null; $('video').hidden = true;
-    }
-    function restoreCameraControls() {
-      $('placeholder').style.display = 'flex'; $('placeholderTitle').textContent = 'Your camera preview';
-      $('placeholderText').textContent = 'Enable your camera to record another video.';
-      $('cameraBtn').textContent = 'Enable camera'; $('cameraBtn').disabled = false;
-      $('startBtn').hidden = false; $('startBtn').disabled = true;
-      $('stopBtn').hidden = true; $('stopBtn').disabled = false;
-      $('badge').classList.remove('recording'); $('badgeText').textContent = 'NOT RECORDING';
-    }
-
-    $('startBtn').addEventListener('click', () => {
-      if (!stream || !cameraReady || busy || uploaded) return;
-      clearMessage(); chunks = [];
-      const mimeType = supportedMimeType();
-      try {
-        const options = { videoBitsPerSecond: 145000, audioBitsPerSecond: 32000 };
-        if (mimeType) options.mimeType = mimeType;
-        recorder = new MediaRecorder(stream, options);
-      } catch (err) {
-        try { recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined); }
-        catch (e) { showMessage('Could not start recording. Try an updated browser.', 'error'); return; }
-      }
-      recorder.ondataavailable = event => { if (event.data?.size) chunks.push(event.data); };
-      recorder.onerror = () => {
-        stopTimer(); stopCamera(); busy = false; restoreCameraControls();
-        setStatus('Recording failed. Please try again.'); showMessage('A recording error occurred.', 'error');
-      };
-      recorder.onstop = () => {
-        stopTimer();
-        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-        $('timer').textContent = formatTime(elapsed); stopCamera();
-        const finalType = (recorder.mimeType || mimeType || 'video/webm').split(';')[0].toLowerCase();
-        const blob = new Blob(chunks, { type: finalType });
-        $('startBtn').disabled = true; $('stopBtn').hidden = true; $('stopBtn').disabled = false;
-        console.log('Final recording size:', blob.size, 'bytes; MIME:', blob.type, '; chunks:', chunks.length);
-        if (blob.size < 1024) {
-          busy = false; restoreCameraControls(); setStatus('No usable video data was captured.');
-          showMessage('The recording is too small to be a valid video. Please record again.', 'error'); return;
-        }
-        if (blob.size > MAX_BYTES) {
-          busy = false; restoreCameraControls(); setStatus('The recording exceeds the upload limit.');
-          showMessage('This recording is larger than 5 MB. Record a shorter video and try again.', 'error'); return;
-        }
-        uploadVideo(blob);
-      };
+      recorder.start(1000);
+      recording = true;
       startedAt = Date.now();
-      try { recorder.start(1000); }
-      catch (err) { showMessage('Could not start recording. Please try again.', 'error'); return; }
-      busy = true; $('badge').classList.add('recording'); $('badgeText').textContent = 'RECORDING';
-      $('startBtn').hidden = true; $('stopBtn').hidden = false; $('cameraBtn').disabled = true; $('timer').textContent = '00:00';
-      setStatus('Recording in progress. Stop when you are finished.');
-      timerInterval = setInterval(() => $('timer').textContent = formatTime(Math.floor((Date.now() - startedAt) / 1000)), 1000);
-      durationTimeout = setTimeout(() => { if (recorder?.state === 'recording') stopRecording(); }, MAX_DURATION_SECONDS * 1000);
-    });
-
-    function stopRecording() {
-      if (!recorder || recorder.state === 'inactive') return;
-      $('stopBtn').disabled = true; $('badge').classList.remove('recording'); $('badgeText').textContent = 'PROCESSING';
-      setStatus('Recording stopped. Preparing your upload...'); recorder.stop();
+      timerInterval = window.setInterval(updateTimer, 250);
+      recordState.textContent = 'Recording';
+      dot.classList.add('live');
+      startButton.disabled = true;
+      stopButton.disabled = false;
+      retakeButton.disabled = true;
+      startCameraButton.disabled = true;
+      showMessage('Recording in progress. Press Stop recording when finished.', 'info');
+    } catch (err) {
+      showMessage('Could not start recording. Your browser may not support the available video format.', 'error');
     }
-    $('stopBtn').addEventListener('click', stopRecording);
+  }
 
-    function makeUploadId() {
-      if (crypto.randomUUID) return crypto.randomUUID();
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16);
-      });
-    }
-    function bytesToBase64(bytes) {
-      let binary = '';
-      const stride = 0x8000;
-      for (let i = 0; i < bytes.length; i += stride) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + stride, bytes.length)));
-      }
-      return btoa(binary);
-    }
+  function stopRecording() {
+    if (!recorder || recorder.state === 'inactive') return;
+    stopButton.disabled = true;
+    recorder.stop();
+  }
 
-    function postToAppsScript(payload, requestLabel, retry = 0) {
-      return new Promise((resolve, reject) => {
-        const frame = document.createElement('iframe');
-        frame.name = 'upload_' + requestLabel + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-        frame.title = 'Upload response'; frame.style.display = 'none';
-        const form = document.createElement('form');
-        form.method = 'POST'; form.action = SCRIPT_URL; form.target = frame.name; form.style.display = 'none';
-        const input = document.createElement('input'); input.type = 'hidden'; input.name = 'payload'; input.value = JSON.stringify(payload);
-        form.appendChild(input); document.body.appendChild(frame); document.body.appendChild(form);
-        let settled = false, timeoutId;
-        const cleanup = () => {
-          clearTimeout(timeoutId); window.removeEventListener('message', onMessage); form.remove();
-          setTimeout(() => frame.remove(), 1000);
-        };
-        const finish = (error, result) => {
-          if (settled) return; settled = true; cleanup();
-          if (error) reject(error); else resolve(result);
-        };
-        function onMessage(event) {
-          // The iframe's WindowProxy remains the same across cross-origin redirects.
-          // Check the exact iframe source; origin can vary across Apps Script redirects.
-          if (event.source !== frame.contentWindow) return;
-          const data = event.data;
-          if (!data || data.type !== 'video-upload-result' || data.requestId !== payload.uploadId) return;
-          if (data.result?.success) finish(null, data.result);
-          else finish(new Error(data.result?.message || 'The server rejected this upload request.'));
-        }
-        window.addEventListener('message', onMessage);
-        timeoutId = setTimeout(() => finish(new Error('No response received for ' + requestLabel + ' after 45 seconds.')), REQUEST_TIMEOUT_MS);
-        try { form.submit(); }
-        catch (err) { finish(err); }
-      }).catch(async err => {
-        if (retry < 1) {
-          // A retry of the same chunk is safe because the backend replaces the chunk with the same index.
-          await new Promise(resolve => setTimeout(resolve, 700));
-          return postToAppsScript(payload, requestLabel, retry + 1);
-        }
-        throw err;
-      });
+  function onRecordingStopped() {
+    recording = false;
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    const type = recorder && recorder.mimeType ? recorder.mimeType : (mimeType || 'video/webm');
+    recordedBlob = new Blob(chunks, { type });
+    chunks = [];
+    resetRecordingControls();
+
+    if (!recordedBlob.size) {
+      showMessage('No video data was produced. Please record again.', 'error');
+      return;
     }
 
-    async function uploadVideo(blob) {
-      busy = true;
-      $('progress').style.display = 'block'; $('progressBar').style.width = '2%';
-      showMessage('Preparing your video...', 'info'); setStatus('Preparing a secure chunked upload. Please keep this page open.');
-      try {
-        const buffer = await blob.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        const uploadId = makeUploadId();
-        const totalChunks = Math.ceil(bytes.length / CHUNK_BYTES);
-        const mimeType = (blob.type || 'video/webm').split(';')[0].toLowerCase();
-        console.log('Uploading video bytes:', bytes.length, 'chunks:', totalChunks, 'upload ID:', uploadId);
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    recordedUrl = URL.createObjectURL(recordedBlob);
+    video.pause();
+    video.srcObject = null;
+    video.src = recordedUrl;
+    video.controls = true;
+    video.muted = false;
+    video.autoplay = false;
+    video.load();
 
-        for (let index = 0; index < totalChunks; index++) {
-          const part = bytes.subarray(index * CHUNK_BYTES, Math.min((index + 1) * CHUNK_BYTES, bytes.length));
-          const payload = { action: 'chunk', uploadId, index, totalChunks, chunkBase64: bytesToBase64(part) };
-          showMessage('Uploading video part ' + (index + 1) + ' of ' + totalChunks + '...', 'info');
-          await postToAppsScript(payload, 'chunk ' + (index + 1));
-          $('progressBar').style.width = Math.round(((index + 1) / (totalChunks + 1)) * 90) + '%';
-        }
+    const ext = extensionFor(type);
+    downloadLink.href = recordedUrl;
+    downloadLink.download = 'recording-' + new Date().toISOString().replace(/[:.]/g, '-') + ext;
+    downloadLink.classList.remove('disabled');
+    downloadLink.setAttribute('aria-disabled', 'false');
+    uploadToDriveButton.disabled = false;
+    retakeButton.disabled = false;
+    showMessage('Recording ready to preview. Play it back, then choose Download video to save it locally.', 'success');
+  }
 
-        showMessage('All video parts received. Saving the complete video...', 'info');
-        const finalPayload = {
-          action: 'finalize', uploadId, totalChunks,
-          name: $('name').value.trim(), email: $('email').value.trim(),
-          consent: $('consent').checked, mimeType
-        };
-        let result;
-        try {
-          result = await postToAppsScript(finalPayload, 'final save');
-        } catch (firstError) {
-          // A final response can be lost after Drive save. Ask the backend to finalize
-          // again using the same ID; the backend's cached result prevents duplicate files.
-          result = await postToAppsScript(finalPayload, 'final save retry');
-        }
-        busy = false; uploaded = true;
-        $('progressBar').style.width = '100%';
-        showMessage('Upload successful! Reference: ' + result.filename + ' (' + result.sizeBytes + ' bytes)', 'success');
-        setStatus('Your recording has been submitted successfully.');
-        $('badgeText').textContent = 'UPLOAD COMPLETE'; $('cameraBtn').disabled = true;
-        $('startBtn').hidden = true; $('stopBtn').hidden = true; $('readyBtn').disabled = true;
-      } catch (err) {
-        busy = false; $('progress').style.display = 'none'; restoreCameraControls();
-        const message = err?.message || 'Upload failed. Please try again.';
-        showMessage(message + ' Any incomplete temporary parts can be safely ignored; no broken final video is saved.', 'error');
-        setStatus('The upload could not be completed.');
-        console.error('Video upload failed:', err);
-      }
+  function discardAndRetake() {
+    if (recording && recorder && recorder.state !== 'inactive') recorder.stop();
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    recordedUrl = null;
+    recordedBlob = null;
+    chunks = [];
+    video.pause();
+    video.removeAttribute('src');
+    video.controls = false;
+    video.muted = true;
+    video.autoplay = true;
+    video.srcObject = stream;
+    if (stream) video.play().catch(() => {});
+    disableDownload();
+    timerText.textContent = '00:00';
+    recordState.textContent = 'Not recording';
+    dot.classList.remove('live');
+    startButton.disabled = !stream;
+    stopButton.disabled = true;
+    retakeButton.disabled = true;
+    startCameraButton.disabled = !!stream;
+    clearMessage();
+  }
+
+  function resetRecordingControls() {
+    recordState.textContent = 'Not recording';
+    dot.classList.remove('live');
+    startButton.disabled = !stream;
+    stopButton.disabled = true;
+    startCameraButton.disabled = !!stream;
+    updateTimer();
+  }
+
+  function updateTimer() {
+    const seconds = recording ? Math.floor((Date.now() - startedAt) / 1000) : Math.floor((Date.now() - startedAt) / 1000);
+    timerText.textContent = String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+  }
+
+  function disableDownload() {
+    uploadToDriveButton.disabled = true;
+    downloadLink.removeAttribute('href');
+    downloadLink.classList.add('disabled');
+    downloadLink.setAttribute('aria-disabled', 'true');
+  }
+
+  function sendRecordingToParent() {
+    if (!recordedBlob || !recordedBlob.size) {
+      showMessage('Record a video first, then upload it.', 'error');
+      return;
     }
+    if (recordedBlob.size > 5 * 1024 * 1024) {
+      showMessage('This recording exceeds the 5 MB upload limit. Please record a shorter video.', 'error');
+      return;
+    }
+    uploadToDriveButton.disabled = true;
+    showMessage('Sending recording to the upload page…', 'info');
+    const mime = recordedBlob.type || 'video/webm';
+    const ext = extensionFor(mime);
+    const name = 'recording-' + new Date().toISOString().replace(/[:.]/g, '-') + ext;
+    window.parent.postMessage({
+      type: 'recorded-video-upload',
+      fileName: name,
+      mimeType: mime,
+      blob: recordedBlob
+    }, '*');
+  }
 
-    window.addEventListener('beforeunload', event => {
-      if (busy || (recorder && recorder.state === 'recording')) { event.preventDefault(); event.returnValue = ''; }
-    });
-  </script>
+  window.addEventListener('message', event => {
+    if (event.source !== window.parent) return;
+    const data = event.data;
+    if (!data || data.type !== 'video-upload-complete') return;
+    uploadToDriveButton.disabled = false;
+    showMessage(data.message || (data.success ? 'Upload complete.' : 'Upload failed.'), data.success ? 'success' : 'error');
+  });
+
+  function chooseMimeType() {
+    if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+    const options = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+    return options.find(type => MediaRecorder.isTypeSupported(type)) || '';
+  }
+
+  function extensionFor(type) {
+    return String(type).toLowerCase().includes('mp4') ? '.mp4' : '.webm';
+  }
+
+  function showMessage(text, kind) {
+    message.textContent = text;
+    message.className = 'message show ' + kind;
+  }
+
+  function clearMessage() {
+    message.textContent = '';
+    message.className = 'message';
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+  });
+})();
+</script>
 </body>
 </html>
